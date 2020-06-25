@@ -1,0 +1,124 @@
+<p>redaction works!</p>
+<div class="spb-page-control sim-control-padding sim-redaction-container">
+    <!-- <kendo-toolbar class="sim-toolbar-no-background sim-container-top"> -->
+        <h4>{{config.title}}</h4>
+    <!-- </kendo-toolbar> -->
+    <div class="sim-container-row">
+        <div class="sim-left-container">
+            <kendo-toolbar class="sim-toolbar-no-background sim-grid-toolbar">
+                <kendo-toolbar-buttongroup
+                    *ngIf="!isDesignMode()"
+                    [selection]="'single'"
+                >
+                    <kendo-toolbar-button
+                        *ngFor="let button of textModeButtons"
+                        [togglable]="true"
+                        [selected]="button.id === selectedTextModeButton.id"
+                        (selectedChange)="textModeButtonChange($event, button)"
+                        [text]="button.name"
+                    ></kendo-toolbar-button>
+                </kendo-toolbar-buttongroup>
+                <kendo-toolbar-buttongroup
+                    *ngIf="isRedactMode()"
+                    [selection]="'single'"
+                >    
+                    <kendo-toolbar-button
+                        [text]="'M'"
+                        class="spb-toggle-button"
+                        [selected]="isManualRedactSelected"
+                        (click)="manualRedactTextSelected()"
+                        [togglable]="true"
+                        ></kendo-toolbar-button>
+                    <kendo-toolbar-button
+                        [text]="'M R'"
+                        class="spb-toggle-button"
+                        [selected]="isRemoveRedactionGroupsSelected"
+                        (click)="removeRedactionGroupsSelected()"
+                        [togglable]="true"
+                    ></kendo-toolbar-button>
+                </kendo-toolbar-buttongroup>
+                <kendo-toolbar-separator *ngIf="isRedactMode() && config.automaticRedaction"></kendo-toolbar-separator>
+                <kendo-toolbar-button
+                    *ngIf="isRedactMode() && config.automaticRedaction"
+                    [text]="'A'"
+                    class="sim-button"
+                    (click)="automaticRedaction()"
+                ></kendo-toolbar-button>
+            </kendo-toolbar>
+            <!-- <div ng-if="!isDesignMode()"
+                contenteditable="{{isTextEditable()}}"
+                ng-model="pageModel.data[config.dataSource]"
+                ng-model-options="{debounce: 250}"
+                id="{{::id}}"
+                ng-mouseup="mouseUpOrKeyUp($event)"
+                ng-keyup="mouseUpOrKeyUp($event)"
+                ng-keydown="keyDown()"
+                ng-dblclick="onTextDoubleClick($event)"
+                ng-paste="simUtilService.handlePaste($event)"
+                class="sim-text-edit sim-redact"
+                ng-style="{'height': config.height}">
+            </div> -->
+            <div #editableContent
+                class="redaction-text"
+                [contenteditable]="isEditMode()"
+                [(ngModel)]="redactionText"
+                [ngModelOptions]="{debounce: 250}"
+                [ngStyle]="{'height': config.height}"
+                (mouseup)="mouseUpOrKeyUp($event)"
+                (keyup)="mouseUpOrKeyUp($event)"
+                (keydown)="keyDown($event)"
+            ></div>
+        </div>
+
+        <div class="sim-right-container">
+            <kendo-toolbar class="sim-toolbar-no-background sim-grid-toolbar">
+                <kendo-toolbar-button
+                    *ngIf="!isDesignMode() && isRedactMode()"
+                    [text]="'Redact'"
+                    (click)="performRedactions()"
+                    [disabled]="completeRedactionDisabled()"
+                ></kendo-toolbar-button>
+            </kendo-toolbar>
+            <div class="sim-grid">
+                <kendo-grid
+                    [data]="redactionGroups"
+                    [height]="config.height"
+                    [pageable]="false"
+                    [selectable]="gridData.selectableSettings"
+                    (selectionChange)="gridSelection($event)"
+                    [sortable]="gridData.sortableSettings"
+                    (cellClick)="onGridCellClick($event)"
+                >
+                    <kendo-grid-column
+                        *ngFor="let col of gridData.columns"
+                        [field]="col.field"
+                        [title]="col.title"
+                        [editable]="false"
+                    ></kendo-grid-column>
+                </kendo-grid>
+                <kendo-contextmenu #gridmenu
+                    [items]="gridContextMenuItems" 
+                    (select)="onContextItemSelect($event)"
+                ></kendo-contextmenu>
+            </div>
+        </div>
+    </div>
+</div>
+<kendo-dialog
+    *ngIf="isLabelDialogOpen"
+    title="Label"
+    (close)="closeLabelDialog('cancel')"
+>
+    <input
+        type="text"
+        [(ngModel)]="groupLabel"
+    >
+    <kendo-dialog-actions>
+        <button kendoButton (click)="closeLabelDialog('cancel')">Cancel</button>
+        <button kendoButton (click)="closeLabelDialog('update')" primary="true">Update</button>
+    </kendo-dialog-actions>
+</kendo-dialog>
+
+
+
+

@@ -1,0 +1,19 @@
+.redaction-text Span[group-uuid] {
+    border-bottom: 0.15rem dashed !important;
+}
+
+.redaction-text Span[redacted] {
+    border-bottom: none !important;
+}   
+
+.redaction-text[contenteditable=false] Span.selected-span {
+    background-color: #FFCC32 !important;
+    color: white !important;
+    cursor: pointer;
+}
+
+.redacted-text {
+    background-color:black !important;
+    color: white !important;
+    cursor: pointer;
+}
