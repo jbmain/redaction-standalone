@@ -23,14 +23,14 @@
                     [selection]="'single'"
                 >    
                     <kendo-toolbar-button
-                        [text]="'M'"
+                        [text]="'Manual redaction'"
                         class="spb-toggle-button"
                         [selected]="isManualRedactSelected"
                         (click)="manualRedactTextSelected()"
                         [togglable]="true"
                         ></kendo-toolbar-button>
                     <kendo-toolbar-button
-                        [text]="'M R'"
+                        [text]="'Remove redaction'"
                         class="spb-toggle-button"
                         [selected]="isRemoveRedactionGroupsSelected"
                         (click)="removeRedactionGroupsSelected()"
@@ -40,7 +40,7 @@
                 <kendo-toolbar-separator *ngIf="isRedactMode() && config.automaticRedaction"></kendo-toolbar-separator>
                 <kendo-toolbar-button
                     *ngIf="isRedactMode() && config.automaticRedaction"
-                    [text]="'A'"
+                    [text]="'Automaitc redaction'"
                     class="sim-button"
                     (click)="automaticRedaction()"
                 ></kendo-toolbar-button>
