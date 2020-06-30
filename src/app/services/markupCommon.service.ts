@@ -215,13 +215,15 @@ export class MarkupCommonService {
     groupComment: string,
     groupTypeName: string,
     groupColor: string
-  ): [string, number] {
+  ): [string, number, string, string] {
     const endPosition = pos + foundTextString.length;
     const element = this.createTextSelectionElement(groupUuid, groupLabel, groupComment, groupTypeName, groupColor);
     element.innerText = foundTextString;
     return [
       structuredTextHtml.substring(0, pos) + element.outerHTML + structuredTextHtml.substring(endPosition),
-      pos + element.outerHTML.length
+      pos + element.outerHTML.length,
+      element.getAttribute(htmlAttributes.textSelectionUuid),
+      element.textContent
     ];
   }
 
@@ -241,9 +243,7 @@ export class MarkupCommonService {
     element.setAttribute(htmlAttributes.textSelectionUuid, textSelectionUuid);
     element.setAttribute(htmlAttributes.groupColor, groupColor);
     element.setAttribute(htmlAttributes.style, "border-color:" + groupColor + ";cursor:pointer");
-    // // IE 11 has multiple issues with contenteditable.  One of these issues is that if the last word in the contenteditable is set
-    // // to false then you are then unable to select the text after the read only text.
-    // element.setAttribute(htmlAttributes.contenteditable, this.isIE.toString());
+    element.setAttribute(htmlAttributes.contenteditable, "false");
     return element;
   }
 }

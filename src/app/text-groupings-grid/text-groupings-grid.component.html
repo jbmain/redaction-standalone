@@ -1,0 +1,58 @@
+<kendo-toolbar class="sim-toolbar-no-background">
+    <kendo-toolbar-button
+        [text]="'Add'"
+        (click)="addListItem()"
+        [disabled]="!showLabel"
+    ></kendo-toolbar-button>
+    <kendo-toolbar-button
+        [text]="'Remove'"
+        (click)="deleteListItems()"
+        [disabled]="!selectedListItem && !showLabel"
+    ></kendo-toolbar-button>
+    <kendo-toolbar-button
+        [text]="'Edit'"
+        (click)="editListItem()"
+        [disabled]="!selectedListItem && !showLabel"
+    ></kendo-toolbar-button>
+</kendo-toolbar>
+<div class="list-container">
+    <ul 
+    *ngIf="listItems.length > 0 else emptyMessage"
+    selectedSelector=".selected">
+        <li
+            *ngFor="let item of listItems"
+            (click)="listSelection(item)"
+            (keydown.enter)="listSelection(item)"
+            [class.selected]="isSelected(item.id)"
+            class="list-item"
+        >
+            {{item.label}}
+        </li>
+    </ul >
+</div>
+
+<kendo-dialog
+    *ngIf="isDialogOpen"
+    title="Label"
+    (close)="closeDialog()"
+>
+    <div class="config-input">
+        <span class="input-label">Label:</span>
+        <input kendoTextBox [(ngModel)]="dialogLabel" />
+    </div>
+    <div class="config-input">
+        <span class="input-label">Name:</span>
+        <kendo-dropdownlist 
+            [data]="redactionConcepts"
+            [(ngModel)]="dialogName">
+        </kendo-dropdownlist>
+    </div>
+    <kendo-dialog-actions>
+        <button kendoButton (click)="closeDialog()">Cancel</button>
+        <button kendoButton (click)="commitDialog()" primary="true">Update</button>
+    </kendo-dialog-actions>
+</kendo-dialog>
+
+<ng-template #emptyMessage>
+    No list items.
+</ng-template>

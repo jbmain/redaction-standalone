@@ -1,0 +1,38 @@
+<kendo-dialog
+    *ngIf="isDialogOpen"
+    title="Multiple Instances"
+    (close)="cancel()"
+    class="sim-multiple-selection-dialog"
+>
+<span class="sng-field-label">{{numberOfInstancesFoundString}}</span>
+<div class="sng-form sim-layout-padding-top">
+    <span class="sng-field-label">Select the instances to mark for redaction:</span>
+    <div class="sim-table-container" tabindex="0">
+        <table class="sim-text-selection-table">
+            <tr *ngFor="let text of highlightedTextObjects"
+                (click)="markRow(text)">
+                <td class="sim-text-selection-cell">
+                    <input type="checkbox"
+                        [(ngModel)]="text.redact">
+                </td>
+                <td class="sim-text-selection-cell">
+                    <div [innerHTML]="text.sentence" tabindex="0">
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="sim-layout-padding-top">
+        <a (click)="checkAll()"
+           tabindex="0">Check all</a>
+        <kendo-toolbar-separator></kendo-toolbar-separator>
+        <a (click)="uncheckAll()"
+           tabindex="0">Uncheck all</a>
+    </div>
+</div>
+
+    <kendo-dialog-actions>
+        <button kendoButton (click)="cancel()">Cancel</button>
+        <button kendoButton (click)="commit()" primary="true">Update</button>
+    </kendo-dialog-actions>
+</kendo-dialog>

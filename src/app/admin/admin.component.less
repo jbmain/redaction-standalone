@@ -1,0 +1,35 @@
+@border: solid 1px hsla(218, 12%, 83%, 0.5);
+
+.admin-view{
+  border: @border;
+
+  .admin-container {
+    display: flex;
+    // padding: 0 0.5rem 0.5rem 0.5rem;
+
+    .control-container {
+      flex-basis: 75%;
+      padding: 1rem;
+    }
+    
+    .config-container {
+      border-left: @border;
+      border-left-width: 5px;
+      padding: 0.5rem;
+      min-width: 400px;
+
+      .config-input {
+        padding: 0.5rem;
+
+        .input-label{
+          display: block;
+        }
+
+        .checkbox-input-label {
+          padding-left: 0.5rem;
+        }
+      }
+    }
+  }
+
+}

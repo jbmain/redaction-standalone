@@ -1,7 +1,13 @@
 import { Injectable, ElementRef } from "@angular/core";
 import { MarkupCommonService, htmlAttributes } from "../services/markupCommon.service";
 import { RegexMarkupService } from "../services/regexMarkup.service";
-import { IGroup, TextSelection, IHighlightedTextMultipleInstancesObject } from "../interfaces/redaction.component";
+import { IGroup, TextSelection, IHighlightedTextMultipleInstancesObject, ITextSelectionObject } from "../interfaces/redaction.component";
+import { orderBy, find } from "lodash-es";
+
+export interface IEntityTextGrouping {
+  text: string;
+  group: string;
+}
 
 @Injectable({
   providedIn: "root",
@@ -13,23 +19,86 @@ export class RedactionComponentService {
     private regexMarkupService: RegexMarkupService
   ) {}
 
-  public manualRedactText(redactionText, editableConentEl): IGroup[] {
+  public manualRedactText(
+    redactionText: string,
+    editableConentEl: ElementRef,
+    openMultiSelectDialog: (matches: number, textSelection: TextSelection) => void
+  ): [IGroup, string] | undefined {
     const selectedText: Selection | null = this.markupCommonService.getSelection();
     this.markupCommonService.getTextSelection(selectedText);
     this.markupCommonService.trimSpacesFromSelection(selectedText);
     if (selectedText && selectedText.anchorOffset !== selectedText.focusOffset) {
       const textSelection = this.markupCommonService.setManualMarkupTextSelection(selectedText, false);
       if (textSelection) {
-        return this.checkMultipleMatchesAndMarkup(textSelection, editableConentEl, redactionText);
+        return this.checkMultipleMatchesAndMarkup(
+          textSelection,
+          editableConentEl,
+          redactionText,
+          openMultiSelectDialog
+        );
       }
     }
-    return [];
+    return undefined;
   }
 
-  public automaticRedactText(redactionText) {
+  public automaticRedactText(redactionText, groupTypes): [IGroup[], string] {
+    // Ensure paragraphs are broken by newlines then strip out html before sending.
+    const html = "<div>" + redactionText.replace(/(<\/?div>|<\/?p>|<br>)/g, "$1\n") + "</div>";
+    const text = $(html).text();
+    const textGroupings = orderBy(
+      this.regexMarkupService.getRedaction(text),
+      (group: IEntityTextGrouping): number =>  group.text.length,
+      "desc"
+    );
+
+    const redactionGroupings = textGroupings.reduce((groups: IGroup[], textGrouping: IEntityTextGrouping): IGroup[] => {
+      // .filter((textGrouping: IEntityTextGrouping) => textGrouping.text)
+      // .map((textGrouping: IEntityTextGrouping) => {
+        // Find the text and markup.
+        if (textGrouping.text) {
+          const groupUuid = this.markupCommonService.createUUID();
+          const type = find(groupTypes, {name: textGrouping.group});
+          let returnObj: {group: IGroup, updatedRedactionText: string} | undefined;
+          if (type) {
+            returnObj = this.markupMultipleTextSelections(
+              redactionText,
+              groupUuid,
+              textGrouping.text,
+              type.label,
+              textGrouping.group,
+              "#000000",
+              textGrouping.text
+            );
+
+            // redactionText = updatedRedactionText;
+            // return group;
+          } else {
+            returnObj = this.markupMultipleTextSelections(
+              redactionText,
+              groupUuid,
+              textGrouping.text,
+              "",
+              textGrouping.group,
+              "#000000",
+              textGrouping.text
+            );
+          }
+          if (returnObj) {
+            redactionText = returnObj.updatedRedactionText;
+            groups.push(returnObj.group);
+            return groups;
+          }
+        }
+
+        return groups;
+      },
+      []
+    );
+
+    return [redactionGroupings, redactionText];
   }
 
-  public redactSpans(editableConentEl: ElementRef, standardRedactionLength: boolean, showLabel: boolean) {
+  public redactSpans(editableConentEl: ElementRef, standardRedactionLength: boolean, showLabel: boolean): string {
     const redactedSpans: HTMLElement[] = editableConentEl.nativeElement.querySelectorAll("span[text-selection-uuid]");
     redactedSpans.forEach((redactedSpan: HTMLElement): void => {
       redactedSpan.setAttribute("style", "background-color: black; color: white");
@@ -58,6 +127,8 @@ export class RedactionComponentService {
       }
       redactedSpan.setAttribute("redacted", "true");
     });
+
+    return editableConentEl.nativeElement.innerHTML;
     // this.textSelected = false;
     // this.messageService.success(this.Resources.sim.redaction.completeRedaction.info.msg, SASMessageOrientation.TOP, 4 * 1000);
   }
@@ -105,14 +176,14 @@ export class RedactionComponentService {
     redactionGroups: IGroup[],
     onSelectGroup: (event: {selectedRows: any[]}) => void,
     redactionText: string,
-    editableConentEl: ElementRef
-  ): IGroup[] {
+    editableConentEl: ElementRef,
+    openMultiSelectDialog: (matches: number, textSelection: TextSelection) => void
+  ): [IGroup, string] | undefined {
     this.markupCommonService.highlightSelectedGroup(target, redactionGroups, onSelectGroup);
     if (isManualRedact) {
-      const newRedactionGroups: IGroup[] = this.manualRedactText(redactionText, editableConentEl);
-      return redactionGroups.concat(newRedactionGroups);
+      return this.manualRedactText(redactionText, editableConentEl, openMultiSelectDialog);
     } else {
-      return redactionGroups;
+      return undefined;
     }
     // return this.checkTextSelected();
   }
@@ -146,40 +217,37 @@ export class RedactionComponentService {
   //   return selected?.toString().trim().length > 0;
   // }
 
-  private checkMultipleMatchesAndMarkup(textSelection: TextSelection, editableConentEl: ElementRef, redactionText: string): IGroup[] {
+  private checkMultipleMatchesAndMarkup(
+    textSelection: TextSelection,
+    editableConentEl: ElementRef,
+    redactionText: string,
+    openMultiSelectDialog: (matches: number, textSelection: TextSelection) => void
+  ): [IGroup, string] | undefined {
     const matches = this.markupCommonService.getTextSelectionMatchesFound(
       textSelection.selectedString,
       redactionText
     );
-    // if (matches > 0) {
-    //     this.multipleSelectionsDialog
-    //       .show({
-    //         redactionHtml: this.pageModel.data[this.attributes.dataSource],
-    //         selectedText: selectedString,
-    //         matches
-    //       })
-    //       .then((output: ISimMultipleSelectionsDialogOutput) => {
-    //         this.markUpText("", selectedString, "", "", "", true, output.instancesToMarkup);
-    //       })
-    //       .catch(noop);
-    // } else {
-    return this.markUpText(redactionText, textSelection, editableConentEl, textSelection.selectedString);
-    // }
+    if (matches > 0) {
+        openMultiSelectDialog(matches, textSelection);
+        return undefined;
+    } else {
+      return this.markUpText(redactionText, textSelection, editableConentEl, textSelection.selectedString);
+    }
   }
 
   // Used to markup the text selected by the user.
-  private markUpText(
+  public markUpText(
     redactionText: string,
     textSelection: TextSelection,
     editableConentEl: ElementRef,
     groupLabel: string = "",
+    includeFoundTextSelections: boolean = false,
+    selectedInstances?: IHighlightedTextMultipleInstancesObject[],
+    groupColor: string = "black",
     groupUuid?: string,
     groupComment: string = "",
     groupTypeName: string = "",
-    groupColor: string = "black",
-    includeFoundTextSelections: boolean = false,
-    selectedInstances?: IHighlightedTextMultipleInstancesObject[]
-  ): IGroup[] {
+  ): [IGroup, string] | undefined {
     if (groupUuid) {
         const spans = editableConentEl.nativeElement.querySelectorAll("span[group-uuid='" + groupUuid + "']");
         $(spans)
@@ -191,33 +259,40 @@ export class RedactionComponentService {
     }
 
     if (includeFoundTextSelections && textSelection) {
-        this.markupMultipleTextSelections(
-          redactionText,
-          groupUuid,
-          groupLabel,
-          groupComment,
-          groupTypeName,
-          groupColor,
-          textSelection.selectedString,
-          selectedInstances
-        );
+      const returnObj: {group: IGroup, updatedRedactionText: string} | undefined = this.markupMultipleTextSelections(
+        redactionText,
+        groupUuid,
+        groupLabel,
+        groupComment,
+        groupTypeName,
+        groupColor,
+        textSelection.selectedString,
+        selectedInstances
+      );
+
+      // editableConentEl.nativeElement.innerHTML = updatedRedactionText;
+      if (returnObj) {
+        return [returnObj.group, returnObj.updatedRedactionText];
+      } else {
+        return undefined;
+      }
     } else if (textSelection) {
-        const element = this.markupCommonService.createTextSelectionElement(groupUuid, groupLabel, groupComment, groupTypeName, groupColor);
-        textSelection.range.surroundContents(element);
-        return [{
+      const element = this.markupCommonService.createTextSelectionElement(groupUuid, groupLabel, groupComment, groupTypeName, groupColor);
+      textSelection.range.surroundContents(element);
+      return [{
+        groupUuid,
+        groupLabel,
+        groupComment,
+        groupTypeName,
+        groupTypeLabel: null,
+        groupTypeLinkEntity: null,
+        groupColor,
+        textSelections: [{
           groupUuid,
-          groupLabel,
-          groupComment,
-          groupTypeName,
-          groupTypeLabel: null,
-          groupTypeLinkEntity: null,
-          groupColor,
-          textSelections: [{
-            groupUuid,
-            textSelectionUuid: element.getAttribute(htmlAttributes.textSelectionUuid),
-            selectedText: element.textContent
-          }],
-        }];
+          textSelectionUuid: element.getAttribute(htmlAttributes.textSelectionUuid),
+          selectedText: element.textContent
+        }],
+      }, redactionText];
     }
   }
 
@@ -230,10 +305,11 @@ export class RedactionComponentService {
     groupColor: string,
     foundTextString: string,
     selectedInstances?: IHighlightedTextMultipleInstancesObject[]
-  ): void {
+  ): {group: IGroup, updatedRedactionText: string} | undefined {
     // Find all instances that match the text selections that are not in spans and make text selections.
     let pos = redactionText.indexOf(foundTextString);
     let currentMatch = 0;
+    const textSelections: ITextSelectionObject[] = [];
     while (pos > -1) {
       if ((
         !selectedInstances &&
@@ -244,7 +320,12 @@ export class RedactionComponentService {
           selectedInstances[currentMatch].redact &&
           !this.markupCommonService.isFoundTextInSpan(redactionText, pos, foundTextString))
       )) {
-        const values = this.markupCommonService.replaceTextSelectionWithElement(
+        const [
+          updateRedactionText,
+          newPos,
+          textSelectionUuid,
+          selectedText
+        ] = this.markupCommonService.replaceTextSelectionWithElement(
           pos,
           foundTextString,
           redactionText,
@@ -254,13 +335,37 @@ export class RedactionComponentService {
           groupTypeName,
           groupColor
         );
-        redactionText = values[0];
-        pos = values[1];
+        redactionText = updateRedactionText;
+        pos = newPos;
+
+        textSelections.push({
+          groupUuid,
+          textSelectionUuid,
+          selectedText
+        });
       }
       if (!this.markupCommonService.isFoundTextInSpan(redactionText, pos, foundTextString)) {
         currentMatch++;
       }
       pos = redactionText.indexOf(foundTextString, pos + 1);
+    }
+
+    if (textSelections.length > 0) {
+      return {
+          group: {
+          groupUuid,
+          groupLabel,
+          groupComment,
+          groupTypeName,
+          groupTypeLabel: null,
+          groupTypeLinkEntity: null,
+          groupColor,
+          textSelections,
+        },
+        updatedRedactionText: redactionText
+      };
+    } else {
+      return undefined;
     }
   }
 }

@@ -1,0 +1,36 @@
+.list-container {
+    height: 200px;
+    border: solid 1px hsla(218, 12%, 83%, 0.5);
+    
+    ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        .list-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+
+            &.selected {
+                background-color: hsla(217, 13%, 73%, 0.25);
+                color: hsla(212, 13%, 19%, 1);
+            }
+
+            &:hover {
+                background-color: hsla(217, 13%, 73%, 0.2);
+                color: hsla(212, 13%, 19%, 1);
+            }
+        }
+    }
+}
+
+.config-input {
+    padding: 0.5rem;
+
+    .input-label{
+        display: block;
+    }
+}

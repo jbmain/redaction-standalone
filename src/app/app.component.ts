@@ -1,4 +1,5 @@
 import { Component } from "@angular/core";
+import { Router } from "@angular/router";
 
 declare const $: JQuery;
 
@@ -8,5 +9,4 @@ declare const $: JQuery;
   styleUrls: ["./app.component.less"]
 })
 export class AppComponent {
-  title = "redaction-standalone";
 }

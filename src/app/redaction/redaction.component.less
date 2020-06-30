@@ -1,19 +1,71 @@
-.redaction-text Span[group-uuid] {
-    border-bottom: 0.15rem dashed !important;
-}
-
-.redaction-text Span[redacted] {
-    border-bottom: none !important;
-}   
-
-.redaction-text[contenteditable=false] Span.selected-span {
-    background-color: #FFCC32 !important;
-    color: white !important;
-    cursor: pointer;
-}
-
 .redacted-text {
     background-color:black !important;
     color: white !important;
     cursor: pointer;
+}
+
+.redaction-text {
+    white-space: pre-wrap;
+    border: 1px solid #ebedef;
+    padding: 0.5rem;
+    overflow: auto;
+    line-height: 175%;
+    word-break: break-word;
+
+    Span[group-uuid] {
+        border-bottom: 0.15rem dashed !important;
+    }
+    
+    Span[redacted] {
+        border-bottom: none !important;
+    }
+
+    &[contenteditable=false] Span.selected-span {
+        background-color: #FFCC32 !important;
+        color: white !important;
+        cursor: pointer;
+    }
+}
+
+.redaction-control {
+    border: 1px solid #ebedef;
+    padding: 1rem;
+
+    .redaction-container {
+        display: flex;
+
+        .toolbar {
+            min-height: 48px;
+
+            kendo-toolbar {
+                padding-left: 0;
+                padding-right: 0;
+                background-color: unset;
+                border: none;
+            }
+        }
+
+        .left-container {
+            width: 70%;
+            height: 100%;
+            padding-right: 0.5rem;
+
+            .toolbar {
+                display: flex;
+
+                .left-toolbar {
+                    flex-grow: 1;
+                }
+            }
+        }
+
+        .right-container {
+            width: 30%;
+        }
+    }
+}
+
+.title {
+    margin: 0;
+    padding: 0.5rem;
 }

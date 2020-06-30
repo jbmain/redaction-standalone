@@ -167,6 +167,9 @@ SEE LICENSE IN LICENSE.md
 @progress/kendo-angular-menu
 SEE LICENSE IN LICENSE.md
 
+@progress/kendo-angular-notification
+SEE LICENSE IN LICENSE.md
+
 @progress/kendo-angular-pdf-export
 SEE LICENSE in LICENSE.md
 # Kendo UI for Angular

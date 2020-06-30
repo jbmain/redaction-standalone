@@ -1,0 +1,53 @@
+<div class="admin-view">
+    <kendo-toolbar class="toolbar">
+        <kendo-toolbar-button
+            [text]="'Save'"
+            (click)="save()"
+            [disabled]="!enableSave"
+        ></kendo-toolbar-button>
+        <kendo-toolbar-button
+            [text]="'Reset'"
+            (click)="reset()"
+        ></kendo-toolbar-button>
+    </kendo-toolbar>
+    <div class="admin-container">
+        <div class="control-container">    
+            <app-redaction
+                [mode]="'design'"
+                [redactionText]=""
+                [config]="config"
+            ></app-redaction>
+        </div>
+        <div class="config-container">
+            <h3>Redaction</h3>
+            <div class="config-input">
+                <span class="input-label">Title:</span>
+                <input kendoTextBox [(ngModel)]="title"/>
+            </div>
+            <div class="config-input">
+                <span class="input-label">Height:</span>
+                <input kendoTextBox [(ngModel)]="height"/>            
+            </div>
+            <div class="config-input">
+                <input type="checkbox" kendoCheckBox [(ngModel)]="automaticRedaction" />
+                <span class="checkbox-input-label">Automatic redaction</span>        
+            </div>
+            <div class="config-input">
+                <input type="checkbox" kendoCheckBox [(ngModel)]="showLabel" />
+                <span class="checkbox-input-label">Show label</span>        
+            </div>
+            <div class="config-input">
+                <span class="input-label">Text groupings:</span>
+                <app-text-groupings-grid
+                [listItems]="textGroupings"
+                [showLabel]="showLabel"
+                (listItemsUpdate)="updateTextGroupings($event)"
+                ></app-text-groupings-grid>
+            </div>
+            <div class="config-input">
+                <input type="checkbox" kendoCheckBox [(ngModel)]="standardRedactionLength" />
+                <span class="checkbox-input-label">Standard redaction length</span>        
+            </div>
+        </div>
+    </div>
+</div>

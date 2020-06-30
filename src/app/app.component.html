@@ -1,5 +1,7 @@
-<app-redaction
-    [mode]="'edit'"
-    [redactionText]="'Test text'"
-    [config]="{title: 'Test', height: '300px', automaticRedaction: true, showLabel: true, textGroupings: []}"
-></app-redaction>
+<nav>
+    <ul class="nav-list">
+        <li class="nav-list-item"><a routerLink="/client" routerLinkActive="active">Client</a></li>
+        <li class="nav-list-item"><a routerLink="/admin" routerLinkActive="active">Admin</a></li>
+    </ul>
+</nav>
+<router-outlet></router-outlet>

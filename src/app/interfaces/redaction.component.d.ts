@@ -1,9 +1,11 @@
+import { IConfigurationGroupData } from "./test-grouping-grid";
+
 export interface RedactionConfig {
   title: string;
-  height: number;
+  height: string;
   automaticRedaction: boolean;
   showLabel: boolean;
-  textGroupings: any;
+  textGroupings: IConfigurationGroupData[];
   standardRedactionLength: boolean;
 }
 

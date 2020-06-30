@@ -1,0 +1,24 @@
+<kendo-toolbar>
+    <kendo-toolbar-button
+        [text]="'Save'"
+        (click)="save()"
+        [disabled]="!enableSave"
+    ></kendo-toolbar-button>
+    <kendo-toolbar-button
+        [text]="'Reset'"
+        (click)="reset()"
+    ></kendo-toolbar-button>
+</kendo-toolbar>
+<div class="page">
+    <app-redaction
+        *ngIf="config else configMsg"
+        [mode]="'edit'"
+        [redactionText]="redactionText"
+        [config]="config"
+        (updateText)="updateText($event)"
+    ></app-redaction>
+</div>
+
+<ng-template #configMsg>
+    <h3>Please configure redaction through admin</h3>
+</ng-template>

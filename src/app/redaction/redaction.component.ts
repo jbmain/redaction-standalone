@@ -1,5 +1,5 @@
-import { Component, OnInit, Input, ViewChild, ElementRef, ViewEncapsulation } from "@angular/core";
-import { RedactionConfig, IGroup } from "../interfaces/redaction.component";
+import { Component, OnInit, Input, ViewChild, ElementRef, ViewEncapsulation, Output, EventEmitter } from "@angular/core";
+import { RedactionConfig, IGroup, TextSelection, IHighlightedTextMultipleInstancesObject } from "../interfaces/redaction.component";
 import { ContextMenuComponent } from "@progress/kendo-angular-menu";
 import { isUndefined } from "lodash-es";
 import { RedactionComponentService } from "./redaction.component.service";
@@ -21,11 +21,11 @@ export class RedactionComponent implements OnInit {
   @Input() mode: string;
   @Input() redactionText: string;
   @Input() config: RedactionConfig;
+  @Output() updateText = new EventEmitter();
 
   public textModeButtons;
   public selectedTextModeButton;
   public gridData;
-  public groupTypes;
 
   public redactionGroups: IGroup[] = [];
   public selectedRedactionGroup: IGroup;
@@ -42,6 +42,10 @@ export class RedactionComponent implements OnInit {
   public isLabelDialogOpen = false;
   public groupLabel = "";
 
+  public multiSelectMatches: number;
+  public multiSelectTextSelection: TextSelection;
+  public isMultiSelectionDialogOpen = false;
+
   constructor(
     private redactionComponentService: RedactionComponentService
   ) { }
@@ -51,11 +55,18 @@ export class RedactionComponent implements OnInit {
     this.setupTextMode();
     this.setupGroupGrid();
     this.setupContextMenu();
-
-    if (!this.isDesignMode()) {
-      this.groupTypes = this.config?.textGroupings;
-    }
   }
+
+  public get redactionTextHTML(): string {
+    return this.redactionText;
+  }
+
+
+  public set redactionTextHTML(v: string) {
+    this.redactionText = v;
+    this.updateText.emit(this.redactionText);
+  }
+
 
   // Boolean functions
   public isDesignMode(): boolean {
@@ -83,8 +94,16 @@ export class RedactionComponent implements OnInit {
     this.isManualRedactSelected = !this.isManualRedactSelected;
 
     if (this.isManualRedactSelected) {
-      const newRedactionGroups: IGroup[] = this.redactionComponentService.manualRedactText(this.redactionText, this.editableContentEl);
-      this.redactionGroups = this.redactionGroups.concat(newRedactionGroups);
+      const returnArray = this.redactionComponentService.manualRedactText(
+        this.redactionText,
+        this.editableContentEl,
+        this.openMultiSelectDialog
+      );
+
+      if (!isUndefined(returnArray)) {
+        this.redactionGroups.push(returnArray[0]);
+        this.redactionTextHTML = returnArray[1];
+      }
     }
   }
 
@@ -94,13 +113,18 @@ export class RedactionComponent implements OnInit {
   }
 
   public automaticRedaction() {
-    this.redactionComponentService.automaticRedactText(this.redactionText);
+    const [redactionGroups, htmlText] = this.redactionComponentService.automaticRedactText(
+      this.redactionText,
+      this.config.showLabel ? this.config.textGroupings : []
+    );
+    this.redactionGroups.push(...redactionGroups);
+    this.redactionTextHTML = htmlText;
   }
 
   public performRedactions() {
     const confirmResult = confirm("Completing the redaction will permanently redact marked text. Are you sure you want to continue?");
     if (confirmResult) {
-      this.redactionComponentService.redactSpans(
+      this.redactionTextHTML = this.redactionComponentService.redactSpans(
         this.editableContentEl,
         this.config.standardRedactionLength,
         this.config.showLabel
@@ -113,7 +137,7 @@ export class RedactionComponent implements OnInit {
 
   // Grid functions
   public gridSelection = (event: SelectionEvent) => {
-    this.selectedRedactionGroup = event.selectedRows[0].dataItem as IGroup;
+    this.selectedRedactionGroup = event.selectedRows[0]?.dataItem as IGroup;
     this.redactionComponentService.highlightSelectedGroup(this.editableContentEl, this.selectedRedactionGroup);
   }
 
@@ -158,18 +182,29 @@ export class RedactionComponent implements OnInit {
           );
           this.redactionGroups = redactionGroups;
           if (clearSelectedGroup) {
-            this.selectedRedactionGroup = undefined;const unSelectedSpans = this.editableContentEl.nativeElement.querySelectorAll("span.selected-span");
+            this.selectedRedactionGroup = undefined;
+            const unSelectedSpans = this.editableContentEl.nativeElement.querySelectorAll("span.selected-span");
             $(unSelectedSpans).removeClass("selected-span");
           }
         } else {
-          this.redactionGroups = this.redactionComponentService.highlightText(
+          const returnArray = this.redactionComponentService.highlightText(
             this.isManualRedactSelected,
             target,
             this.redactionGroups,
             this.gridSelection,
             this.redactionText,
-            this.editableContentEl
+            this.editableContentEl,
+            this.openMultiSelectDialog
           );
+
+          // if (!isUndefined(returnGroup)) {
+          //   this.redactionGroups.push(returnGroup);
+          // }
+
+          if (!isUndefined(returnArray)) {
+            this.redactionGroups.push(returnArray[0]);
+            this.redactionTextHTML = returnArray[1];
+          }
         }
       }
     }
@@ -181,6 +216,15 @@ export class RedactionComponent implements OnInit {
     }
   }
 
+  public handlePaste(event: ClipboardEvent): void {
+    event.preventDefault();
+    // Paste plain text
+    if (event.clipboardData ) {
+        const content = event.clipboardData.getData("text/plain");
+        document.execCommand("insertText", false, content);
+    }
+}
+
   public closeLabelDialog(action: string) {
     if (action === "update" && this.contextRedactionGroup) {
       this.redactionComponentService.updateSelectedGroupComment(
@@ -190,6 +234,39 @@ export class RedactionComponent implements OnInit {
       );
     }
     this.isLabelDialogOpen = false;
+  }
+
+  public openMultiSelectDialog: (matches: number, textSelection: TextSelection) => void =
+    (matches: number, textSelection: TextSelection) => {
+    this.multiSelectMatches = matches;
+    this.multiSelectTextSelection = textSelection;
+    this.isMultiSelectionDialogOpen = true;
+  }
+
+  public multiSelectClose(output: IHighlightedTextMultipleInstancesObject[] | undefined) {
+    this.isMultiSelectionDialogOpen = false;
+    if (output) {
+      const returnArray = this.redactionComponentService.markUpText(
+        this.redactionText,
+        this.multiSelectTextSelection,
+        this.editableContentEl,
+        this.multiSelectTextSelection.selectedString,
+        true,
+        output
+      );
+
+      // if (!isUndefined(returnGroup)) {
+      //   this.redactionGroups.push(returnGroup);
+      // }
+
+      if (!isUndefined(returnArray)) {
+        this.redactionGroups.push(returnArray[0]);
+        this.redactionTextHTML = returnArray[1];
+      }
+    }
+    this.multiSelectMatches = undefined;
+    this.multiSelectTextSelection = undefined;
+
   }
 
   // Private functions
