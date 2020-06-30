@@ -12,8 +12,8 @@ export class AppComponent {
   constructor(private router: Router) {
     const path = localStorage.getItem("path");
     if (path === "/client" || path === "/admin") {
+      localStorage.removeItem("path");
       this.router.navigate([path]);
     }
-    localStorage.removeItem("path");
   }
 }
