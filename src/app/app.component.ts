@@ -9,4 +9,11 @@ declare const $: JQuery;
   styleUrls: ["./app.component.less"]
 })
 export class AppComponent {
+  constructor(private router: Router) {
+    const path = localStorage.getItem("path");
+    if (path) {
+      localStorage.removeItem("path");
+      this.router.navigate([path]);
+    }
+  }
 }
