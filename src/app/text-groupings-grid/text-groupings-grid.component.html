@@ -37,13 +37,13 @@
     (close)="closeDialog()"
 >
     <div class="config-input">
-        <span class="input-label">Label:</span>
+        <span class="input-label required">Label:</span>
         <input kendoTextBox [(ngModel)]="dialogLabel" />
     </div>
     <div class="config-input">
-        <span class="input-label">Name:</span>
+        <span class="input-label required">Name:</span>
         <kendo-dropdownlist 
-            [data]="redactionConcepts"
+            [data]="avalableRedactionConcepts"
             [(ngModel)]="dialogName">
         </kendo-dropdownlist>
     </div>

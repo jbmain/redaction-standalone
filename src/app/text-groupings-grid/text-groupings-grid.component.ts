@@ -1,7 +1,7 @@
 import { Component, OnInit, Output, EventEmitter, Input, ViewEncapsulation } from "@angular/core";
-import { SelectableSettings } from "@progress/kendo-angular-grid";
 import { IConfigurationGroup } from "../interfaces/test-grouping-grid";
 import { RegexMarkupService } from "../services/regexMarkup.service";
+import { some } from "lodash-es";
 
 @Component({
   selector: "app-text-groupings-grid",
@@ -23,6 +23,7 @@ export class TextGroupingsGridComponent implements OnInit {
   public dialogName;
 
   public redactionConcepts: string[];
+  public avalableRedactionConcepts: string[];
 
   constructor(
     private regexMarkupService: RegexMarkupService
@@ -42,6 +43,8 @@ export class TextGroupingsGridComponent implements OnInit {
 
   public addListItem(): void {
     this.addItem = true;
+    this.avalableRedactionConcepts = this.listItems.length === 0 ? this.redactionConcepts :
+      this.redactionConcepts.filter(concept => some(this.listItems, item => item.data.name !== concept));
     this.isDialogOpen = true;
   }
 
@@ -54,6 +57,12 @@ export class TextGroupingsGridComponent implements OnInit {
   public editListItem(): void {
     this.dialogLabel = this.selectedListItem.data.label;
     this.dialogName = this.selectedListItem.data.name;
+    this.avalableRedactionConcepts = this.redactionConcepts.filter(
+      concept => some(
+        this.listItems,
+        item => item.data.name !== concept && item.id !== this.selectedListItem.id
+      )
+    );
     this.isDialogOpen = true;
   }
 
@@ -84,5 +93,4 @@ export class TextGroupingsGridComponent implements OnInit {
       this.listItemsUpdate.emit(this.listItems);
     }
   }
-
 }
