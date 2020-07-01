@@ -10,8 +10,8 @@ declare const $: JQuery;
 })
 export class AppComponent {
   constructor(private router: Router) {
-    if (!this.router.navigated) {
-      const path = localStorage.getItem("path");
+    const path = localStorage.getItem("path");
+    if (!this.router.navigated && path) {
       if (path === "/admin") {
         localStorage.removeItem("path");
         this.router.navigate([path]);
