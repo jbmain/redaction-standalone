@@ -13,6 +13,7 @@ export class ClientComponent implements OnInit {
   public config: RedactionConfig;
   public redactionText: string;
   public enableSave = false;
+  public resetRedaction = false;
 
   constructor(private notificationService: NotificationService) { }
 
@@ -43,12 +44,12 @@ export class ClientComponent implements OnInit {
   }
 
   public reset() {
-    localStorage.clear();
-    this.config = undefined;
-    this.redactionText = undefined;
-    this.enableSave = false;
+    this.redactionText = "";
+    this.resetRedaction = true;
+    this.enableSave = true;
+    setTimeout(() => this.resetRedaction = false);
     this.notificationService.show({
-      content: "Successfully reset admin and redaction text",
+      content: "Successfully reset redaction text",
       hideAfter: 600,
       position: {
         horizontal: "center", vertical: "bottom"

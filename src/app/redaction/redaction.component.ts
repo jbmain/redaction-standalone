@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild, ElementRef, ViewEncapsulation, Output, EventEmitter } from "@angular/core";
+import { Component, OnInit, Input, ViewChild, ElementRef, ViewEncapsulation, Output, EventEmitter, SimpleChanges, OnChanges } from "@angular/core";
 import { RedactionConfig, IGroup, TextSelection, IHighlightedTextMultipleInstancesObject } from "../interfaces/redaction.component";
 import { ContextMenuComponent } from "@progress/kendo-angular-menu";
 import { isUndefined } from "lodash-es";
@@ -16,11 +16,12 @@ export enum textMode {
   styleUrls: ["./redaction.component.less"],
   encapsulation: ViewEncapsulation.None
 })
-export class RedactionComponent implements OnInit {
+export class RedactionComponent implements OnInit, OnChanges {
 
   @Input() mode: string;
   @Input() redactionText: string;
   @Input() config: RedactionConfig;
+  @Input() reset: boolean;
   @Output() updateText = new EventEmitter();
 
   public textModeButtons;
@@ -55,6 +56,13 @@ export class RedactionComponent implements OnInit {
     this.setupTextMode();
     this.setupGroupGrid();
     this.setupContextMenu();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (!changes.reset?.firstChange && changes.reset?.currentValue) {
+      this.redactionGroups = [];
+      this.selectedRedactionGroup = undefined;
+    }
   }
 
   public get redactionTextHTML(): string {
@@ -292,7 +300,7 @@ export class RedactionComponent implements OnInit {
       this.gridData.columns.push({
         field: "groupComment",
         title: "Label"
-      })
+      });
     }
   }
 

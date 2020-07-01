@@ -48,10 +48,18 @@ export class AdminComponent implements OnInit {
   }
 
   public reset() {
-    localStorage.clear();
-    this.ngOnInit();
+    this.config = {
+      title: "Redaction",
+      height: "300px",
+      automaticRedaction: false,
+      standardRedactionLength: false,
+      showLabel: false,
+      textGroupings: []
+    };
+    this.enableSave = true;
+
     this.notificationService.show({
-      content: "Successfully cleared admin and redaction text",
+      content: "Successfully reset admin",
       hideAfter: 600,
       position: {
         horizontal: "center", vertical: "bottom"
