@@ -28,7 +28,7 @@ export class RedactionComponent implements OnInit, OnChanges {
   public selectedTextModeButton;
   public gridData;
 
-  public redactionGroups: IGroup[] = [];
+  public redactionGroups: IGroup[];
   public selectedRedactionGroup: IGroup;
 
   public gridContextMenuItems;
@@ -52,10 +52,12 @@ export class RedactionComponent implements OnInit, OnChanges {
   ) { }
 
   ngOnInit(): void {
-
     this.setupTextMode();
     this.setupGroupGrid();
     this.setupContextMenu();
+    this.redactionGroups = this.redactionText ?
+      this.redactionComponentService.getGroups(this.redactionText) :
+      [];
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -185,10 +187,11 @@ export class RedactionComponent implements OnInit, OnChanges {
       const target = event.target as HTMLElement;
       if (!this.isDesignMode()) {
         if (this.isRemoveRedactionGroupsSelected) {
-          const {redactionGroups, clearSelectedGroup} = this.redactionComponentService.removeRedactGroup(
-            target, this.editableContentEl, this.redactionGroups, this.selectedRedactionGroup?.groupUuid
+          const {redactionGroups, clearSelectedGroup, redactionText} = this.redactionComponentService.removeRedactGroup(
+            target, this.redactionText, this.redactionGroups, this.selectedRedactionGroup?.groupUuid
           );
           this.redactionGroups = redactionGroups;
+          this.redactionText = redactionText;
           if (clearSelectedGroup) {
             this.selectedRedactionGroup = undefined;
             const unSelectedSpans = this.editableContentEl.nativeElement.querySelectorAll("span.selected-span");
@@ -279,7 +282,6 @@ export class RedactionComponent implements OnInit, OnChanges {
 
   // Private functions
   private setupGroupGrid() {
-    // TODO set columns, add label columns is label enabled, set context menu(iff edit)
     this.gridData = {
       columns: [
         {
@@ -320,11 +322,14 @@ export class RedactionComponent implements OnInit, OnChanges {
   }
 
   private removeRedaction(redactionGroup: IGroup) {
-    this.redactionGroups = this.redactionComponentService.removeRedactionGroup(
+    const {redactionGroups, redactionText} = this.redactionComponentService.removeRedactionGroup(
       redactionGroup,
-      this.editableContentEl,
+      this.redactionText,
       this.redactionGroups
     );
+
+    this.redactionGroups = redactionGroups;
+    this.redactionText = redactionText;
 
     if (redactionGroup.groupUuid === this.selectedRedactionGroup?.groupUuid) {
       this.selectedRedactionGroup = undefined;

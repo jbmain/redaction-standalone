@@ -14,8 +14,6 @@ export interface IGroup {
   groupLabel: string | null;
   groupComment: string | null;
   groupTypeName: string | null;
-  groupTypeLabel: string | null;
-  groupTypeLinkEntity: string | null;
   groupColor: string | null;
   textSelections: ITextSelectionObject[];
   // Kendo internal attribute. Used for sng-grid-kendo override.

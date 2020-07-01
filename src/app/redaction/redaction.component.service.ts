@@ -1,8 +1,8 @@
 import { Injectable, ElementRef } from "@angular/core";
 import { MarkupCommonService, htmlAttributes } from "../services/markupCommon.service";
 import { RegexMarkupService } from "../services/regexMarkup.service";
-import { IGroup, TextSelection, IHighlightedTextMultipleInstancesObject, ITextSelectionObject } from "../interfaces/redaction.component";
-import { orderBy, find } from "lodash-es";
+import { IGroup, TextSelection, IHighlightedTextMultipleInstancesObject, ITextSelectionObject,  } from "../interfaces/redaction.component";
+import { orderBy, find, forEach, has, values } from "lodash-es";
 
 export interface IEntityTextGrouping {
   text: string;
@@ -18,6 +18,50 @@ export class RedactionComponentService {
     private markupCommonService: MarkupCommonService,
     private regexMarkupService: RegexMarkupService
   ) {}
+
+  public getGroups(redactionText: string): IGroup[] {
+    const html = "<div>" + redactionText + "</div>";
+    const spansSelected: JQuery = $(html).find("span");
+    const allTextSelections: ITextSelectionObject[] = [];
+    const groups: {[key: string]: IGroup} = {};
+
+    forEach(spansSelected, (spanSelected: HTMLElement) => {
+      if (spanSelected && !spanSelected.getAttribute("redacted")) {
+
+        allTextSelections.push({
+          groupUuid: spanSelected.getAttribute(htmlAttributes.groupUuuid),
+          textSelectionUuid: spanSelected.getAttribute(htmlAttributes.textSelectionUuid),
+          selectedText: spanSelected.textContent
+        });
+
+        // Build up a map of groups
+        const groupUuid: string | null = spanSelected.getAttribute(htmlAttributes.groupUuuid);
+        if (groupUuid) {
+          if (!has(groups, groupUuid)) {
+            groups[groupUuid] = {
+              groupUuid: spanSelected.getAttribute(htmlAttributes.groupUuuid),
+              groupColor: spanSelected.getAttribute(htmlAttributes.groupColor),
+              groupLabel: spanSelected.getAttribute(htmlAttributes.groupLabel),
+              groupComment: spanSelected.getAttribute(htmlAttributes.groupComment),
+              groupTypeName: spanSelected.getAttribute(htmlAttributes.groupTypeName),
+              textSelections: []
+            };
+          }
+        }
+      }
+    });
+
+    // Add text selections to  groups
+    forEach(allTextSelections, (textSelection: ITextSelectionObject) => {
+      if (textSelection.groupUuid) {
+        groups[textSelection.groupUuid].textSelections.push(textSelection);
+      }
+    });
+
+    // Convert the groups map to an array
+    const textSelectionGroups: IGroup[] = values(groups);
+    return textSelectionGroups;
+  }
 
   public manualRedactText(
     redactionText: string,
@@ -135,13 +179,15 @@ export class RedactionComponentService {
 
   public removeRedactGroup(
     target: HTMLElement,
-    editableConentEl: ElementRef,
+    redactionText: string,
     redactionGroups: IGroup[],
     selectedGroupUuid?: string
-  ): {redactionGroups: IGroup[], clearSelectedGroup: boolean} {
+  ): {redactionGroups: IGroup[], clearSelectedGroup: boolean, redactionText: string} {
     if (target.nodeName === "SPAN" && target.hasAttribute("group-uuid") && !target.hasAttribute("redacted")) {
       const uuid = target.getAttribute("group-uuid");
-      const spans = editableConentEl.nativeElement.querySelectorAll("span[group-uuid='" + uuid + "']");
+      const div = document.createElement("div");
+      div.innerHTML = redactionText;
+      const spans = div.querySelectorAll("span[group-uuid='" + uuid + "']");
       $(spans).contents().unwrap();
       const selected = this.markupCommonService.getSelection();
       if (selected) {
@@ -150,24 +196,31 @@ export class RedactionComponentService {
       }
       return {
         redactionGroups: redactionGroups.filter(group => group.groupUuid !== uuid),
-        clearSelectedGroup: uuid === selectedGroupUuid
+        clearSelectedGroup: uuid === selectedGroupUuid,
+        redactionText: div.innerHTML
       };
     } else {
       return {
         redactionGroups,
-        clearSelectedGroup: false
+        clearSelectedGroup: false,
+        redactionText
       };
     }
   }
 
   public removeRedactionGroup(
     selectedGroup: IGroup,
-    editableConentEl: ElementRef,
+    redactionText: string,
     redactionGroups: IGroup[],
-  ): IGroup[] {
-    const spans = editableConentEl.nativeElement.querySelectorAll("span[group-uuid='" + selectedGroup.groupUuid + "']");
+  ): {redactionGroups: IGroup[], redactionText: string} {
+    const div = document.createElement("div");
+    div.innerHTML = redactionText;
+    const spans = div.querySelectorAll("span[group-uuid='" + selectedGroup.groupUuid + "']");
     $(spans).contents().unwrap();
-    return redactionGroups.filter(group => group.groupUuid !== selectedGroup.groupUuid);
+    return {
+      redactionGroups: redactionGroups.filter(group => group.groupUuid !== selectedGroup.groupUuid),
+      redactionText: div.innerHTML
+    };
   }
 
   public highlightText(
@@ -210,12 +263,6 @@ export class RedactionComponentService {
   private patternCounter(str: string, pattern: RegExp): number {
     return ((str || "").match(pattern) || []).length;
   }
-
-  // // Used to check if text currently selected.
-  // private checkTextSelected(): boolean {
-  //   const selected: Selection | null = this.markupCommonService.getSelection();
-  //   return selected?.toString().trim().length > 0;
-  // }
 
   private checkMultipleMatchesAndMarkup(
     textSelection: TextSelection,
@@ -284,8 +331,6 @@ export class RedactionComponentService {
         groupLabel,
         groupComment,
         groupTypeName,
-        groupTypeLabel: null,
-        groupTypeLinkEntity: null,
         groupColor,
         textSelections: [{
           groupUuid,
@@ -357,8 +402,6 @@ export class RedactionComponentService {
           groupLabel,
           groupComment,
           groupTypeName,
-          groupTypeLabel: null,
-          groupTypeLinkEntity: null,
           groupColor,
           textSelections,
         },
