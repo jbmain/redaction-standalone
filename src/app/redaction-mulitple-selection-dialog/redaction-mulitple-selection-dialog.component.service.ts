@@ -77,7 +77,7 @@ export class RedactionMulitpleSelectionDialogComponentService {
     inSentenceTermOffSets.forEach((offset: number) => {
       if (offset + startSentencePos === pos) {
         sentence = sentence.substring(0, offset) +
-          "<span class=\"sim-multiple-instance-highlight\">" +
+          "<span class=\"multiple-instance-highlight\">" +
           selectedText + "</span>" + sentence.substring(offset + selectedText.length);
       }
     });

@@ -44,7 +44,9 @@ export class ClientComponent implements OnInit {
 
   public reset() {
     localStorage.clear();
-    this.ngOnInit();
+    this.config = undefined;
+    this.redactionText = undefined;
+    this.enableSave = false;
     this.notificationService.show({
       content: "Successfully reset admin and redaction text",
       hideAfter: 600,

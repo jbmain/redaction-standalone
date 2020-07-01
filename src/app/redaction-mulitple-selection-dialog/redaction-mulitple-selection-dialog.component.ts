@@ -6,7 +6,7 @@ import { RedactionMulitpleSelectionDialogComponentService } from "./redaction-mu
   selector: "app-redaction-mulitple-selection-dialog",
   templateUrl: "./redaction-mulitple-selection-dialog.component.html",
   styleUrls: ["./redaction-mulitple-selection-dialog.component.less"],
-  // encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None
 })
 export class RedactionMulitpleSelectionDialogComponent implements OnInit {
 
@@ -15,7 +15,6 @@ export class RedactionMulitpleSelectionDialogComponent implements OnInit {
   @Input() selectedText: string;
 
   @Output() closeDialog = new EventEmitter();
-  // @Output() closeDialog: (textMultipleInstances: IHighlightedTextMultipleInstancesObject[] | undefined) => void;
 
   isDialogOpen = true;
 
