@@ -10,13 +10,15 @@ declare const $: JQuery;
 })
 export class AppComponent {
   constructor(private router: Router) {
-    const path = localStorage.getItem("path");
-    if (path === "/admin") {
-      localStorage.removeItem("path");
-      this.router.navigate([path]);
-    } else {
-      localStorage.removeItem("path");
-      this.router.navigate(["/client"]);
+    if (!this.router.navigated) {
+      const path = localStorage.getItem("path");
+      if (path === "/admin") {
+        localStorage.removeItem("path");
+        this.router.navigate([path]);
+      } else {
+        localStorage.removeItem("path");
+        this.router.navigate(["/client"]);
+      }
     }
   }
 }
