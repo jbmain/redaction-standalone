@@ -1,5 +1,6 @@
 import { Component } from "@angular/core";
 import { Router } from "@angular/router";
+import { includes } from "lodash-es";
 
 declare const $: JQuery;
 
@@ -12,7 +13,7 @@ export class AppComponent {
   constructor(private router: Router) {
     const path = localStorage.getItem("path");
     if (!this.router.navigated && path) {
-      if (path === "/admin") {
+      if (includes(path, "admin")) {
         localStorage.removeItem("path");
         this.router.navigate([path]);
       } else {
