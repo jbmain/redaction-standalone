@@ -66,10 +66,14 @@ export class TextGroupingsGridComponent implements OnInit {
     this.isDialogOpen = true;
   }
 
-  public closeDialog(): void {
-    this.isDialogOpen = false;
-    this.dialogLabel = "";
-    this.dialogName = "";
+  public closeDialog(type?: string): void {
+    if (type === "cancel" && !this.addItem) {
+      this.commitDialog();
+    } else {
+      this.isDialogOpen = false;
+      this.dialogLabel = "";
+      this.dialogName = "";
+    }
   }
 
   public commitDialog(): void {
