@@ -33,6 +33,7 @@ export class ClientComponent implements OnInit {
   public save() {
     localStorage.setItem("redactionText", this.redactionText);
     this.enableSave = false;
+    // Bug - toaster display time to short
     this.notificationService.show({
       content: "Successfully saved redaction text",
       hideAfter: 600,
@@ -47,6 +48,7 @@ export class ClientComponent implements OnInit {
     this.redactionText = "";
     this.resetRedaction = true;
     this.enableSave = true;
+    // Bug - toaster display time to short
     setTimeout(() => this.resetRedaction = false);
     this.notificationService.show({
       content: "Successfully reset redaction text",

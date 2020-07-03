@@ -111,6 +111,7 @@ export class MarkupCommonService {
       const groupUuid = target.getAttribute("group-uuid");
       const group = find(textSelectionGroups, {groupUuid});
       if (group) {
+        // Bug - input should be {selectedRows: [{dataItem: group}]}
         onSelectGroup({selectedRows: [group]});
         target.blur();
       }

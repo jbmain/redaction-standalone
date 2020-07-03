@@ -67,6 +67,7 @@ export class TextGroupingsGridComponent implements OnInit {
   }
 
   public closeDialog(type?: string): void {
+    // Bug - edit cancel button performs update
     if (type === "cancel" && !this.addItem) {
       this.commitDialog();
     } else {

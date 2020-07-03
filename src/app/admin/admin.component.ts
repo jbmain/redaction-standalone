@@ -8,7 +8,6 @@ import { NotificationService } from "@progress/kendo-angular-notification";
   selector: "app-admin",
   templateUrl: "./admin.component.html",
   styleUrls: ["./admin.component.less"],
-  // encapsulation: ViewEncapsulation.None
 })
 export class AdminComponent implements OnInit {
 
@@ -37,6 +36,7 @@ export class AdminComponent implements OnInit {
   public save() {
     localStorage.setItem("config", JSON.stringify(this.config));
     this.enableSave = false;
+    // Bug - toaster display time to short
     this.notificationService.show({
       content: "Successfully saved redaction admin",
       hideAfter: 600,
@@ -58,6 +58,7 @@ export class AdminComponent implements OnInit {
     };
     this.enableSave = true;
 
+    // Bug - toaster display time to short
     this.notificationService.show({
       content: "Successfully reset admin",
       hideAfter: 600,
