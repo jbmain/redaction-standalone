@@ -78,24 +78,23 @@ export class TextGroupingsGridComponent implements OnInit {
   }
 
   public commitDialog(): void {
-    if (this.dialogLabel && this.dialogName) {
-      if (this.addItem) {
-        this.listItems.push({
-          id: this.listItems.length,
+    // Bug not enforcing mandatory fields
+    if (this.addItem) {
+      this.listItems.push({
+        id: this.listItems.length,
+        label: this.dialogLabel,
+        data: {
           label: this.dialogLabel,
-          data: {
-            label: this.dialogLabel,
-            name: this.dialogName
-          }
-        });
-      } else {
-        this.selectedListItem.label = this.dialogLabel;
-        this.selectedListItem.data.label = this.dialogLabel;
-        this.selectedListItem.data.name = this.dialogName;
-      }
-      this.addItem = false;
-      this.closeDialog();
-      this.listItemsUpdate.emit(this.listItems);
+          name: this.dialogName
+        }
+      });
+    } else {
+      this.selectedListItem.label = this.dialogLabel;
+      this.selectedListItem.data.label = this.dialogLabel;
+      this.selectedListItem.data.name = this.dialogName;
     }
+    this.addItem = false;
+    this.closeDialog();
+    this.listItemsUpdate.emit(this.listItems);
   }
 }
